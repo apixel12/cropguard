@@ -1,0 +1,91 @@
+{
+  "modelVersion": "router-v1",
+  "architecture": "MobileNetV2",
+  "format": "tfjs_graph_model",
+  "inputSize": [
+    224,
+    224
+  ],
+  "inputShape": [
+    1,
+    224,
+    224,
+    3
+  ],
+  "colorMode": "RGB",
+  "dataset": "Plant identification: lemon dataset + garden dataset (PlantVillage, iBean), labels = plant",
+  "classCount": 16,
+  "classes": [
+    "Apple",
+    "Bean",
+    "Bell pepper",
+    "Blueberry",
+    "Cherry",
+    "Corn",
+    "Grape",
+    "Lemon",
+    "Orange",
+    "Peach",
+    "Potato",
+    "Raspberry",
+    "Soybean",
+    "Squash",
+    "Strawberry",
+    "Tomato"
+  ],
+  "normalization": {
+    "inputRange": [
+      0,
+      255
+    ],
+    "inModel": true,
+    "formula": "pixel / 127.5 - 1",
+    "resize": "center square crop (floor offsets), then bilinear 224x224, half-pixel centers",
+    "channelOrder": "RGB"
+  },
+  "trainingDate": "2026-10-06",
+  "thresholds": {
+    "confidence": 0.63,
+    "margin": 0.34,
+    "precisionAccepted": 0.9901633585104515,
+    "coverage": 0.9854595810974555,
+    "targetPrecision": 0.99,
+    "calibratedOn": "validation",
+    "testCoverage": 0.9851968503937008,
+    "testPrecisionAccepted": 0.9904092071611253
+  },
+  "metrics": {
+    "accuracy": 0.9831496062992126,
+    "top3Accuracy": 0.9981102362204725,
+    "macroPrecision": 0.9837585494527101,
+    "macroRecall": 0.9859640556038034,
+    "macroF1": 0.9845341087117926,
+    "weightedF1": 0.9830212582459024,
+    "evaluatedOn": "held-out test split",
+    "testImages": 6350
+  },
+  "license": "Lemon CC BY 4.0; PlantVillage CC BY-SA 3.0; iBean MIT",
+  "tta": "hflip",
+  "priorCorrection": {
+    "alpha": 1.2,
+    "classWeights": [
+      0.8002312725631769,
+      1.715002417794971,
+      1.024443963027152,
+      1.685658269961977,
+      1.3293197151424287,
+      0.709325,
+      0.709325,
+      0.709325,
+      0.709325,
+      0.953906670252824,
+      1.1774983399734396,
+      6.846766409266409,
+      0.709325,
+      1.3800097276264591,
+      1.616510938924339,
+      0.709325
+    ],
+    "method": "p * w**-alpha, renormalised (logit adjustment)"
+  }
+}
