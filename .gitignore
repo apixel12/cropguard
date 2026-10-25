@@ -1,0 +1,14 @@
+node_modules
+dist
+.venv*
+/data/
+*.log
+.DS_Store
+*.zip
+test-results/
+
+# Claude desktop app preview config (local only)
+.claude/
+
+# GitHub Actions workflows (kept locally; add via GitHub when the token has the workflow scope)
+.github/workflows/
