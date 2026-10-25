@@ -1,0 +1,131 @@
+{
+  "modelVersion": "router-v2",
+  "architecture": "MobileNetV2",
+  "format": "tfjs_graph_model",
+  "inputSize": [
+    224,
+    224
+  ],
+  "inputShape": [
+    1,
+    224,
+    224,
+    3
+  ],
+  "colorMode": "RGB",
+  "dataset": "Plant identification across all supported crops: lemon + crops-v2 datasets, labels = plant",
+  "classCount": 21,
+  "classes": [
+    "Apple",
+    "Bean",
+    "Bell pepper",
+    "Blueberry",
+    "Cassava",
+    "Cherry",
+    "Corn",
+    "Cotton",
+    "Grape",
+    "Lemon",
+    "Orange",
+    "Peach",
+    "Potato",
+    "Raspberry",
+    "Rice",
+    "Soybean",
+    "Squash",
+    "Strawberry",
+    "Sugarcane",
+    "Tomato",
+    "Wheat"
+  ],
+  "normalization": {
+    "inputRange": [
+      0,
+      255
+    ],
+    "inModel": true,
+    "formula": "pixel / 127.5 - 1",
+    "resize": "center square crop (floor offsets), then bilinear 224x224, half-pixel centers",
+    "channelOrder": "RGB"
+  },
+  "trainingDate": "2026-10-23",
+  "thresholds": {
+    "confidence": 0.62,
+    "margin": 0.36,
+    "precisionAccepted": 0.9900977198697068,
+    "coverage": 0.9833440102498399,
+    "targetPrecision": 0.99,
+    "calibratedOn": "validation",
+    "testCoverage": 0.9809457418380388,
+    "testPrecisionAccepted": 0.9874452208930475
+  },
+  "metrics": {
+    "accuracy": 0.9785058673172998,
+    "top3Accuracy": 0.9977924944812362,
+    "macroPrecision": 0.9725807041035492,
+    "macroRecall": 0.9792122767401088,
+    "macroF1": 0.9755743072298886,
+    "weightedF1": 0.9785689849002693,
+    "evaluatedOn": "held-out test split",
+    "testImages": 8546,
+    "appRule": {
+      "cutoff": 0.7,
+      "rule": "top-1 >= cutoff; per-condition cut-offs for 90% validation precision",
+      "accuracy": 0.9785058673172998,
+      "coverage": 0.9783896828163123,
+      "precision": 0.9885999287495547
+    }
+  },
+  "license": "See DATA_SOURCES.md; model released CC BY-SA 3.0",
+  "tta": "hflip",
+  "priorCorrection": {
+    "alpha": 0.4,
+    "classWeights": [
+      0.7378240215658234,
+      2.0671916735746523,
+      1.0477824463118581,
+      1.6095453241537578,
+      0.8549904761904762,
+      1.4700661557607912,
+      0.682899741366195,
+      1.2419966243324756,
+      0.7904867568329107,
+      0.8549904761904762,
+      0.8549904761904762,
+      1.003981301303988,
+      1.052425499988277,
+      3.7238261158121784,
+      0.4701883393040454,
+      0.8208433911198888,
+      1.32845008730652,
+      1.5915682728787717,
+      1.3202447130797965,
+      0.587218733647305,
+      2.1722319008904374
+    ],
+    "method": "p * w**-alpha, renormalised (logit adjustment)"
+  },
+  "classThresholds": {
+    "Apple": 0.7,
+    "Bean": 0.7,
+    "Bell pepper": 0.7,
+    "Blueberry": 0.7,
+    "Cassava": 0.7,
+    "Cherry": 0.7,
+    "Corn": 0.7,
+    "Cotton": 0.7,
+    "Grape": 0.7,
+    "Lemon": 0.7,
+    "Orange": 0.7,
+    "Peach": 0.7,
+    "Potato": 0.7,
+    "Raspberry": 0.7,
+    "Rice": 0.7,
+    "Soybean": 0.7,
+    "Squash": 0.7,
+    "Strawberry": 0.7,
+    "Sugarcane": 0.7,
+    "Tomato": 0.7,
+    "Wheat": 0.7
+  }
+}

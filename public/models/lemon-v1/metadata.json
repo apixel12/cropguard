@@ -1,0 +1,98 @@
+{
+  "modelVersion": "lemon-v1",
+  "architecture": "MobileNetV2",
+  "format": "tfjs_graph_model",
+  "inputSize": [
+    224,
+    224
+  ],
+  "inputShape": [
+    1,
+    224,
+    224,
+    3
+  ],
+  "colorMode": "RGB",
+  "dataset": "Large-Scale Lemon Leaf Disease and Pest Image Dataset from Bangladesh (Mendeley Data, DOI 10.17632/8d9fv6kpt3.2)",
+  "classCount": 18,
+  "classes": [
+    "Algal_Leaf_Spot",
+    "Anthracnose",
+    "Bacterial Blight",
+    "Black Spot",
+    "Citrus Canker",
+    "Citrus Hindu Mite",
+    "Citrus Leafminer",
+    "Citrus_Pest",
+    "Citrus_Scab",
+    "Curl Leaf",
+    "Dry Leaf",
+    "Greening",
+    "Healthy",
+    "Lemon_Sooty_Mold",
+    "Melanose",
+    "Spider Mites",
+    "Swallowtail Larval Herbivory (Deficiency)",
+    "Yellow_Spot"
+  ],
+  "normalization": {
+    "inputRange": [
+      0,
+      255
+    ],
+    "inModel": true,
+    "formula": "pixel / 127.5 - 1",
+    "resize": "center square crop (floor offsets), then bilinear 224x224, half-pixel centers",
+    "channelOrder": "RGB"
+  },
+  "trainingDate": "2026-10-23",
+  "thresholds": {
+    "confidence": 0.98,
+    "margin": 0.0,
+    "precisionAccepted": 0.9905335628227194,
+    "coverage": 0.5201432408236347,
+    "targetPrecision": 0.99,
+    "calibratedOn": "validation",
+    "testCoverage": 0.5362578334825425,
+    "testPrecisionAccepted": 0.9891485809682805
+  },
+  "metrics": {
+    "accuracy": 0.8500447627573858,
+    "top3Accuracy": 0.9668755595344674,
+    "macroPrecision": 0.7975366615571823,
+    "macroRecall": 0.8466911882841551,
+    "macroF1": 0.8098132156224863,
+    "weightedF1": 0.8526660531225716,
+    "evaluatedOn": "held-out test split",
+    "testImages": 2234,
+    "appRule": {
+      "cutoff": 0.7,
+      "rule": "top-1 >= cutoff; per-condition cut-offs for 90% validation precision",
+      "accuracy": 0.8500447627573858,
+      "coverage": 0.7350044762757386,
+      "precision": 0.9707673568818515
+    }
+  },
+  "license": "CC BY 4.0",
+  "tta": "hflip",
+  "classThresholds": {
+    "Algal_Leaf_Spot": 0.7,
+    "Anthracnose": 0.7,
+    "Bacterial Blight": 1.01,
+    "Black Spot": 0.7,
+    "Citrus Canker": 0.7,
+    "Citrus Hindu Mite": 0.7,
+    "Citrus Leafminer": 0.72,
+    "Citrus_Pest": 0.7,
+    "Citrus_Scab": 0.7,
+    "Curl Leaf": 0.7,
+    "Dry Leaf": 0.93,
+    "Greening": 0.7,
+    "Healthy": 0.7,
+    "Lemon_Sooty_Mold": 0.7,
+    "Melanose": 1.01,
+    "Spider Mites": 0.97,
+    "Swallowtail Larval Herbivory (Deficiency)": 0.98,
+    "Yellow_Spot": 0.7
+  }
+}
