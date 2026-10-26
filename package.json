@@ -15,6 +15,7 @@
   "dependencies": {
     "@fontsource/public-sans": "^5.3.0",
     "@phosphor-icons/react": "^2.1.10",
+    "@supabase/supabase-js": "2.117.3",
     "@tensorflow/tfjs-backend-cpu": "^4.22.0",
     "@tensorflow/tfjs-backend-webgl": "^4.22.0",
     "@tensorflow/tfjs-converter": "^4.22.0",

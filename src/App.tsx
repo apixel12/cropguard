@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import About from './components/About'
+import Account from './components/Account'
+import Privacy from './components/Privacy'
+import { useAuth } from './auth/AuthProvider'
+import { pushScan, syncNow } from './sync/historySync'
 import Capture, { type Captured } from './components/Capture'
 import { chooseFrames, type Source } from './ml/frames'
 import ChoosePlant from './components/ChoosePlant'
@@ -24,6 +28,8 @@ type Screen =
   | { s: 'result'; photo: string; plant: Plant | null; suggestions: Plant[]; outcome: Outcome }
   | { s: 'history' }
   | { s: 'about' }
+  | { s: 'account' }
+  | { s: 'privacy'; from: 'account' | 'home' }
 
 const pvName = (label: string) => {
   const info = plantVillageInfo(label)
@@ -38,6 +44,7 @@ const paint = () => new Promise((r) => setTimeout(r, 30)) // let the progress te
 
 export default function App() {
   const { models, state } = useModels()
+  const auth = useAuth()
   const [screen, setScreen] = useState<Screen>({ s: 'home' })
   const [online, setOnline] = useState(navigator.onLine)
   const [offlineReady, setOfflineReady] = useState(false)
@@ -52,6 +59,11 @@ export default function App() {
     lastPhoto.current = photo
     if (!photo) img.current = null
   }, [screen])
+
+  // Signed in (and two-factor verified, if enabled): sync history in the background.
+  useEffect(() => { if (auth.status === 'signed-in') syncNow().catch(() => {}) }, [auth.status])
+  // Opened from a password-reset email: go straight to "choose a new password".
+  useEffect(() => { if (auth.recovery) setScreen({ s: 'account' }) }, [auth.recovery])
 
   // Each new screen starts at the top.
   useEffect(() => { window.scrollTo(0, 0) }, [screen.s])
@@ -113,7 +125,7 @@ export default function App() {
       const p = outcome.pred
       // a storage failure must not turn a valid result into an error
       try {
-        await saveScan({
+        const saved = await saveScan({
           crop: outcome.cropName,
           modelVersion: p.modelVersion,
           prediction: p.status === 'confident' ? p.top[0].label : 'Uncertain',
@@ -122,6 +134,7 @@ export default function App() {
           thumbnail: await makeThumbnail(image.still),
         })
         outcome.saved = true
+        void pushScan(saved) // signed-in users: back up the result (never the photo)
       } catch (e) {
         console.warn('[cropguard] history save failed', e)
         outcome.saved = false
@@ -177,6 +190,7 @@ export default function App() {
           onScan={() => setScreen({ s: 'capture' })}
           onHistory={() => setScreen({ s: 'history' })}
           onAbout={() => setScreen({ s: 'about' })}
+          onAccount={() => setScreen({ s: 'account' })}
           displayName={historyName}
         />
       )
@@ -214,6 +228,10 @@ export default function App() {
       )
     case 'about':
       return <About onBack={() => setScreen({ s: 'home' })} />
+    case 'account':
+      return <Account onBack={() => setScreen({ s: 'home' })} onPrivacy={() => setScreen({ s: 'privacy', from: 'account' })} />
+    case 'privacy':
+      return <Privacy onBack={() => setScreen(screen.from === 'account' ? { s: 'account' } : { s: 'home' })} />
     case 'history':
       return <History onBack={() => setScreen({ s: 'home' })} displayName={historyName} />
   }

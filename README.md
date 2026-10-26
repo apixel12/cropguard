@@ -1,7 +1,7 @@
 # CropGuard
 
 **Offline plant-leaf disease screening that runs entirely on your phone.**
-Take a photo or a short video of a leaf. CropGuard works out which of 21 plants it is, then a model on the device identifies the likely condition, says how confident it is, explains what the condition means, and suggests conservative next steps. No upload, no account, no signal needed after the first visit. All of this completely free.
+Take a photo or a short video of a leaf. CropGuard works out which of 21 plants it is, then a model on the device identifies the likely condition, says how confident it is, explains what the condition means, and suggests conservative next steps. No upload and no signal needed after the first visit; an account is optional (it only syncs results, never photos). All of this completely free.
 
 Built for Impact Hacks 2026.
 
@@ -382,7 +382,7 @@ All numbers above come from held-out images **from the same datasets**. The lemo
 
 - `vite-plugin-pwa` precaches the app shell, fonts, icons, all three `model.json` files, **every weight shard by name** and the metadata files. `npm run build` fails if any model file is missing from the precache manifest (`scripts/verify-sw.mjs`).
 - "Ready, and works offline" is shown only after all three models have loaded, passed a self-test (shape, finite outputs, softmax sums to 1) **and** every shard is confirmed present in Cache Storage.
-- No backend, no image upload, no analytics, no account. `?netlog=1` turns on a request logger for offline testing.
+- No image upload, no analytics. Accounts are optional and only sync check results (see `docs/AUTH_SETUP.md`). `?netlog=1` turns on a request logger for offline testing.
 
 ## Security
 
@@ -399,7 +399,8 @@ Modelled on what production sites ship, following the OWASP Secure Headers Proje
 - **Untrusted files:** non-images and photos over 60 MB are refused before decoding; images over 200 MP after (decompression bombs). Videos are limited to 200 MB and 60 seconds, and frames are capped at 1920 px.
 - **Responsible disclosure:** `/.well-known/security.txt` (RFC 9116) and [SECURITY.md](SECURITY.md).
 - **Supply chain:** lockfile; `npm audit` before each release (0 known vulnerabilities, development tools included); Dependabot checks npm packages weekly.
-- **No backend, no accounts, no analytics, no third-party requests.** Development network logging (`?netlog=1`) does not exist in production builds.
+- **No analytics, no third-party scripts.** The only network destinations allowed are the app itself, the configured Supabase project (optional accounts) and the Have I Been Pwned range API; analysis never needs the network. Development network logging (`?netlog=1`) does not exist in production builds.
+- **Optional accounts** are built to OWASP ASVS and NIST 800-63B; see the control checklist in [SECURITY.md](SECURITY.md).
 - **Tested:** `tests/security.test.ts` locks the header policy, the Trusted Types rule and the integrity check (a tampered file must be rejected). The end-to-end test runs in real Chrome under the production headers, fails on any CSP violation, and checks that the page is cross-origin isolated and that the browser refuses an injected `innerHTML` string.
 
 ## Choosing crops and datasets

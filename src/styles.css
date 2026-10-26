@@ -211,3 +211,21 @@ details.panel .caption { padding: 0 var(--s4) var(--s3); }
 .result-thumbs img { width: 56px; height: 56px; object-fit: cover; border-radius: var(--radius-sm); }
 .ranked.perphoto li:first-child .r { font-weight: inherit; color: var(--ink-2); } /* no photo is "the" answer */
 .ranked.perphoto li:first-child .bar span { background: var(--ink-3); }
+
+/* ---------- Account (optional sign-in) ---------- */
+.top-actions { display: flex; align-items: center; gap: var(--s2); }
+.form { display: grid; gap: var(--s3); }
+.field { display: grid; gap: 6px; }
+.field label { font-weight: 600; font-size: var(--t-sm); color: var(--ink); }
+.field input { min-height: 52px; padding: 0 var(--s3); border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); color: var(--ink); font: inherit; width: 100%; }
+.field input:focus-visible { outline: 3px solid var(--green); outline-offset: 1px; border-color: var(--green); }
+.pw { position: relative; display: flex; align-items: center; }
+.pw input { padding-right: 52px; }
+.pw .icon-btn { position: absolute; right: 4px; min-height: 44px; min-width: 44px; justify-content: center; }
+.check { display: flex; gap: var(--s3); align-items: flex-start; font-size: var(--t-sm); color: var(--ink-2); }
+.check input { width: 22px; height: 22px; margin-top: 1px; accent-color: var(--green); flex-shrink: 0; }
+.link-row { display: flex; flex-wrap: wrap; gap: var(--s4); }
+.text-link.inline { min-height: 0; padding: 0; font-size: inherit; display: inline; }
+.ok-text { color: var(--green); }
+.qr { background: #fff; padding: 8px; border-radius: var(--radius-sm); justify-self: start; }
+.secret { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; word-break: break-all; user-select: all; }

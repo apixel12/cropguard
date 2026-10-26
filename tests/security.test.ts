@@ -99,3 +99,44 @@ describe('model integrity', () => {
     }
   })
 })
+
+describe('optional accounts: security invariants', () => {
+  const h = JSON.parse(readFileSync('security-headers.json', 'utf8'))
+  const csp: string = h['Content-Security-Policy']
+  const src = (dir: string): string[] => readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
+    e.isDirectory() ? src(`${dir}/${e.name}`) : /\.(ts|tsx)$/.test(e.name) ? [`${dir}/${e.name}`] : [])
+  const code = src('src').map((f) => readFileSync(f, 'utf8')).join('\n')
+
+  it('CSP lets the app talk only to itself, one exact Supabase project and the breach-check API', () => {
+    const connect = csp.match(/connect-src ([^;]+)/)![1].trim().split(/\s+/)
+    expect(connect[0]).toBe("'self'")
+    for (const src of connect.slice(1)) {
+      expect(src).not.toContain('*')
+      expect(src === 'https://api.pwnedpasswords.com' || /^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(src)).toBe(true)
+    }
+    expect(connect.filter((s) => s.endsWith('.supabase.co')).length).toBeLessThanOrEqual(1)
+    expect(csp).toMatch(/form-action 'none'/) // forms never submit to any URL
+    expect(csp).toMatch(/require-trusted-types-for 'script'/)
+  })
+  it('the app never uses the secret service_role key', () => {
+    expect(code).not.toMatch(/service_role|SERVICE_ROLE|sb_secret_/)
+  })
+  it('auth code never logs credentials or sessions', () => {
+    const authCode = src('src/auth').concat(src('src/components').filter((f) => f.endsWith('Account.tsx'))).map((f) => readFileSync(f, 'utf8')).join('\n')
+    expect(authCode).not.toMatch(/console\.(log|info|warn|error|debug)/)
+  })
+  it('database: row-level security on, one-user-only policies, no anonymous access', () => {
+    const sql = readFileSync('supabase/migrations/0001_cropguard.sql', 'utf8')
+    expect(sql).toMatch(/enable row level security/)
+    expect(sql).toMatch(/force row level security/)
+    expect(sql).toMatch(/revoke all on public\.scans from anon/)
+    for (const op of ['select', 'insert', 'update', 'delete']) expect(sql).toMatch(new RegExp(`for ${op} to authenticated`))
+    expect(sql).toMatch(/as restrictive[\s\S]*aal2/) // two-factor enforced by the database
+    expect(sql).toMatch(/security definer set search_path = ''/) // no search_path hijacking
+  })
+  it('sync uploads results only, never images', () => {
+    const sync = readFileSync('src/sync/historySync.ts', 'utf8')
+    expect(sync).not.toMatch(/thumbnail\s*:/)
+    expect(sync).not.toMatch(/storage\.from|Blob/)
+  })
+})

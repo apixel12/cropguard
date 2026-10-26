@@ -39,8 +39,7 @@ export default function About({ onBack }: { onBack: () => void }) {
       <div style={{ display: 'grid', gap: 'var(--s2)' }}>
         <h1>How CropGuard works</h1>
         <p className="lede">
-          Three image models run inside your phone’s browser: one works out which of 21 plants a leaf is from, then a disease model (one for lemon, one for every other crop) checks it for problems. Photos and short videos both work. Your photo is checked on the phone and never uploaded. There’s no account
-          and no tracking. When a model isn’t confident, it says so instead of guessing.
+          Three image models run inside your phone’s browser: one works out which of 21 plants a leaf is from, then a disease model (one for lemon, one for every other crop) checks it for problems. Photos and short videos both work. Your photo is checked on the phone and never uploaded. No account is needed and there’s no tracking. An optional account only backs up your results, never photos. When a model isn’t confident, it says so instead of guessing.
         </p>
       </div>
 

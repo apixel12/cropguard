@@ -1,4 +1,5 @@
-import { Camera, CheckCircle, ClockCounterClockwise, CloudArrowDown, Leaf, WarningCircle } from '@phosphor-icons/react'
+import { Camera, CheckCircle, ClockCounterClockwise, CloudArrowDown, Leaf, UserCircle, WarningCircle } from '@phosphor-icons/react'
+import { authConfigured } from '../auth/client'
 import { useEffect, useState } from 'react'
 import { listScans, type ScanRecord } from '../db/history'
 import { useModels } from '../hooks/useModels'
@@ -11,6 +12,7 @@ interface Props {
   onScan: () => void
   onHistory: () => void
   onAbout: () => void
+  onAccount: () => void
   online: boolean
   offlineReady: boolean
   displayName: (crop: string, label: string) => string
@@ -19,7 +21,7 @@ interface Props {
 const IDS: ModelId[] = ['router-v2', 'lemon-v1', 'crops-v2']
 const PLANTS = ['Lemon', ...PV_CROPS.map((c) => c.name.toLowerCase())]
 
-export default function Home({ onScan, onHistory, onAbout, online, offlineReady, displayName }: Props) {
+export default function Home({ onScan, onHistory, onAbout, onAccount, online, offlineReady, displayName }: Props) {
   const { state, retry } = useModels()
   const ready = IDS.every((id) => state[id].status === 'ready')
   const failed = IDS.filter((id) => state[id].status === 'error')
@@ -38,7 +40,10 @@ export default function Home({ onScan, onHistory, onAbout, online, offlineReady,
     <section className="screen">
       <div className="topbar">
         <span className="wordmark"><Leaf size={24} weight="fill" aria-hidden />CropGuard</span>
-        <button className="icon-btn" onClick={onHistory}><ClockCounterClockwise size={20} aria-hidden />History</button>
+        <span className="top-actions">
+          <button className="icon-btn" onClick={onHistory}><ClockCounterClockwise size={20} aria-hidden />History</button>
+          {authConfigured && <button className="icon-btn" onClick={onAccount} aria-label="Account"><UserCircle size={22} aria-hidden /></button>}
+        </span>
       </div>
 
       <div style={{ display: 'grid', gap: 'var(--s3)' }}>

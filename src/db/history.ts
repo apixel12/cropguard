@@ -8,7 +8,8 @@ export interface ScanRecord {
   prediction: string // class label, or "Uncertain"
   status: 'confident' | 'uncertain'
   confidence: number // top-1 model confidence
-  thumbnail: Blob // small JPEG, never the full-resolution photo
+  thumbnail?: Blob // small JPEG, never the full-resolution photo; never uploaded, so synced-in scans have none
+  synced?: boolean // copied to the signed-in account (results only)
 }
 
 const DB = 'cropguard'
@@ -34,6 +35,19 @@ export async function saveScan(r: Omit<ScanRecord, 'id' | 'timestamp'>): Promise
 export async function listScans(): Promise<ScanRecord[]> {
   const all = await (await db()).getAllFromIndex(STORE, 'timestamp')
   return all.reverse()
+}
+
+/** Store a scan as-is (used when merging history synced from another device). */
+export async function putScan(rec: ScanRecord): Promise<void> {
+  await (await db()).put(STORE, rec)
+}
+
+export async function markSynced(ids: string[]): Promise<void> {
+  const d = await db()
+  for (const id of ids) {
+    const r = (await d.get(STORE, id)) as ScanRecord | undefined
+    if (r && !r.synced) await d.put(STORE, { ...r, synced: true })
+  }
 }
 
 export async function deleteScan(id: string): Promise<void> {

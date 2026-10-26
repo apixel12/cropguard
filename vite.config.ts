@@ -34,10 +34,27 @@ function modelIntegrity(): Plugin {
   }
 }
 
+// Accounts are optional; if a Supabase project is configured, the CSP must allow exactly
+// that origin, otherwise sign-in would silently fail (or someone might loosen the CSP by hand).
+function assertAuthCsp(): Plugin {
+  let devServer = false
+  return {
+    name: 'assert-auth-csp',
+    config(_c, env) { devServer = env.command === 'serve' && !env.isPreview }, // dev server sends no security headers
+    configResolved(c) {
+      if (devServer) return
+      const url = c.env.VITE_SUPABASE_URL as string | undefined
+      if (url && !securityHeaders['Content-Security-Policy'].includes(`connect-src 'self' ${url} `))
+        throw new Error(`VITE_SUPABASE_URL is set but the CSP does not allow ${url}. Run: node scripts/set-auth-csp.mjs`)
+    },
+  }
+}
+
 export default defineConfig({
   plugins: [
     react(),
     modelIntegrity(),
+    assertAuthCsp(),
     VitePWA({
       registerType: 'prompt', // never reload mid-scan: a new version takes over on next launch
       includeAssets: ['icons/*.png', 'icons/*.svg', ...modelFiles],

@@ -1,10 +1,12 @@
 import { ArrowLeft, Trash } from '@phosphor-icons/react'
 import { useEffect, useState } from 'react'
-import { clearScans, deleteScan, listScans, type ScanRecord } from '../db/history'
+import { listScans, type ScanRecord } from '../db/history'
+import { removeAllScans, removeScan } from '../sync/historySync'
 
-function Thumb({ blob }: { blob: Blob }) {
+function Thumb({ blob }: { blob?: Blob }) {
   const [url, setUrl] = useState<string>()
   useEffect(() => {
+    if (!blob) return // synced from another device: photos never leave the phone they were taken on
     const u = URL.createObjectURL(blob)
     setUrl(u)
     return () => URL.revokeObjectURL(u)
@@ -67,7 +69,7 @@ export default function History({ onBack, displayName }: { onBack: () => void; d
       {!!scans?.length && (
         <div className="list-card">
           {scans.map((s) => (
-            <ScanRow key={s.id} s={s} displayName={displayName} onDelete={(id) => deleteScan(id).then(refresh)} />
+            <ScanRow key={s.id} s={s} displayName={displayName} onDelete={(id) => removeScan(id).then(refresh)} />
           ))}
         </div>
       )}
@@ -77,7 +79,7 @@ export default function History({ onBack, displayName }: { onBack: () => void; d
             <b>Delete all {scans.length} checks?</b> This can’t be undone.
             <div className="row-actions" style={{ marginTop: 'var(--s3)' }}>
               <button className="btn" onClick={() => setConfirming(false)}>Cancel</button>
-              <button className="btn danger" onClick={() => clearScans().then(() => { setConfirming(false); refresh() })}>Delete all</button>
+              <button className="btn danger" onClick={() => removeAllScans().then(() => { setConfirming(false); refresh() })}>Delete all</button>
             </div>
           </div>
         </div>

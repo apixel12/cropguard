@@ -12,3 +12,7 @@ test-results/
 
 # GitHub Actions workflows (kept locally; add via GitHub when the token has the workflow scope)
 .github/workflows/
+
+# local configuration (Supabase URL / public key)
+.env.local
+.env*.local

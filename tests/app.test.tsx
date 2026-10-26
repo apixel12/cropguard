@@ -26,7 +26,7 @@ describe('model load failure', () => {
   it('shows Lemon AI unavailable and never claims offline readiness', async () => {
     const { ModelProvider } = await import('../src/hooks/useModels')
     const { default: Home } = await import('../src/components/Home')
-    render(<ModelProvider><ModeProvider><Home onScan={() => {}} onHistory={() => {}} onAbout={() => {}} online offlineReady={false} displayName={(_c, l) => l} /></ModeProvider></ModelProvider>)
+    render(<ModelProvider><ModeProvider><Home onScan={() => {}} onHistory={() => {}} onAbout={() => {}} onAccount={() => {}} online offlineReady={false} displayName={(_c, l) => l} /></ModeProvider></ModelProvider>)
     await waitFor(() => expect(screen.getByText('Some of CropGuard didn’t download.')).toBeTruthy())
     expect(screen.queryByText(/works offline/)).toBeNull()
     expect((screen.getByRole('button', { name: /Check a leaf/ }) as HTMLButtonElement).disabled).toBe(true)
