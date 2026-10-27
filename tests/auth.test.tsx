@@ -27,7 +27,7 @@ afterEach(() => cleanup())
 describe('sign in', () => {
   it('shows one generic message on failure (no account enumeration)', async () => {
     ui()
-    await screen.findByRole('heading', { name: 'Sign in' })
+    await screen.findByRole('heading', { name: 'Welcome back' })
     type(/^Email/, 'someone@example.com'); type(/^Password/, 'wrong password here')
     fireEvent.click(screen.getByRole('button', { name: 'Sign in' }))
     expect(await screen.findByText(GENERIC_SIGNIN_ERROR)).toBeTruthy()
@@ -35,10 +35,10 @@ describe('sign in', () => {
   })
   it('pauses sign-in after repeated failures (brute-force protection)', async () => {
     ui()
-    await screen.findByRole('heading', { name: 'Sign in' })
+    await screen.findByRole('heading', { name: 'Welcome back' })
     type(/^Email/, 'someone@example.com'); type(/^Password/, 'wrong password here')
     for (let i = 0; i < 5; i++) {
-      fireEvent.click(screen.getByRole('button', { name: /Sign in|Please wait/ }))
+      fireEvent.click(screen.getByRole('button', { name: /Sign in|Signing in/ }))
       await waitFor(() => expect(auth.signInWithPassword).toHaveBeenCalledTimes(i + 1))
       await screen.findByText(GENERIC_SIGNIN_ERROR)
     }
@@ -59,7 +59,7 @@ describe('sign in', () => {
 describe('create account', () => {
   it('requires the 13+ confirmation and a strong password', async () => {
     ui()
-    fireEvent.click(await screen.findByRole('button', { name: 'Create an account' }))
+    fireEvent.click(await screen.findByRole('tab', { name: 'Create account' }))
     type(/^Email/, 'new@example.com'); type(/^Password/, 'fern lettuce compost wren')
     fireEvent.click(screen.getByRole('button', { name: 'Create account' }))
     expect(await screen.findByText(/13 or older/, { selector: '[role=alert] *' })).toBeTruthy()
@@ -70,7 +70,7 @@ describe('create account', () => {
   it('the confirmation message is the same whether or not the email is registered', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response('')))
     ui()
-    fireEvent.click(await screen.findByRole('button', { name: 'Create an account' }))
+    fireEvent.click(await screen.findByRole('tab', { name: 'Create account' }))
     type(/^Email/, 'taken@example.com'); type(/^Password/, 'fern lettuce compost wren')
     fireEvent.click(screen.getByRole('checkbox'))
     auth.signUp.mockResolvedValueOnce({ error: { message: 'User already registered' } } as never)

@@ -44,12 +44,12 @@ export default function ChoosePlant({ photo, suggestions, reason, onPick, onBack
       {suggestions.length > 0 && (
         <div>
           <h2 className="section-title">Best guesses</h2>
-          <div className="list-card">{suggestions.map((p) => <Row key={key(p)} p={p} onPick={onPick} />)}</div>
+          <div className="list-card stagger">{suggestions.map((p) => <Row key={key(p)} p={p} onPick={onPick} />)}</div>
         </div>
       )}
       <div>
         <h2 className="section-title">{suggestions.length ? 'Everything else' : 'Plants CropGuard knows'}</h2>
-        <div className="list-card">{rest.map((p) => <Row key={key(p)} p={p} onPick={onPick} />)}</div>
+        <div className="list-card stagger">{rest.map((p) => <Row key={key(p)} p={p} onPick={onPick} />)}</div>
       </div>
     </section>
   )

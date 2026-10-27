@@ -92,7 +92,7 @@ export default function Result({ photo, outcome, onRetake, onHome, displayName, 
       )}
 
       {outcome.kind === 'quality' && (
-        <div className="verdict">
+        <div className="verdict uncertain">
           <span className="pill uncertain"><Question size={16} aria-hidden />Not checked</span>
           <h1>The photo needs retaking</h1>
           <ul className="bullets lede">{outcome.report.issues.map((i) => <li key={i}>{ISSUE_TEXT[i]}</li>)}</ul>
@@ -107,7 +107,7 @@ export default function Result({ photo, outcome, onRetake, onHome, displayName, 
       )}
 
       {p && !confident && (
-        <div className="verdict">
+        <div className="verdict uncertain">
           <PlantLine name={p.cropName} onChange={onChangePlant} />
           <h1>Not sure about this one</h1>
           <span className="pill uncertain"><Question size={16} aria-hidden />Not confident enough to name a problem</span>
@@ -129,7 +129,7 @@ export default function Result({ photo, outcome, onRetake, onHome, displayName, 
       )}
 
       {p && confident && (
-        <div className="verdict">
+        <div className={`verdict ${sev?.cls ?? ''}`}>
           <PlantLine name={p.cropName} onChange={onChangePlant} />
           <h1>{healthy ? 'No problems spotted' : info?.name ?? displayName(p.pred.top[0].label)}</h1>
           {sev && (

@@ -7,7 +7,8 @@ mkdirSync('test-results', { recursive: true })
 const URL = process.env.E2E_URL ?? 'http://localhost:4173/'
 const browser = await chromium.launch({ channel: 'chrome', headless: true,
   args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream'] })
-const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, permissions: ['camera'] })
+const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, permissions: ['camera'],
+  reducedMotion: 'reduce' }) // screenshots show the settled screen, not a frame mid-animation
 const page = await ctx.newPage()
 // any CSP / Trusted Types violation surfaces as a console error and fails the run.
 // One is expected and wanted: tfjs-core's Long.js probes WebAssembly inside a

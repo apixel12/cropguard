@@ -33,7 +33,8 @@ export function useMode() {
 export function ModeSwitch() {
   const { mode, setMode } = useMode()
   return (
-    <div className="mode-switch" role="radiogroup" aria-label="Level of detail">
+    <div className="mode-switch" role="radiogroup" aria-label="Level of detail" data-value={mode === 'farmer' ? 1 : 0}>
+      <span className="thumb" aria-hidden />
       {(['gardener', 'farmer'] as const).map((m) => (
         <button key={m} role="radio" aria-checked={mode === m} className={mode === m ? 'on' : ''} onClick={() => setMode(m)}>
           {m === 'gardener' ? 'Gardener' : 'Farmer'}

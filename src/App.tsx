@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
+import { Check } from '@phosphor-icons/react'
 import About from './components/About'
 import Account from './components/Account'
 import Privacy from './components/Privacy'
@@ -9,6 +11,7 @@ import { chooseFrames, type Source } from './ml/frames'
 import ChoosePlant from './components/ChoosePlant'
 import History from './components/History'
 import Home from './components/Home'
+import type { Tone } from './components/History'
 import Result, { type Input, type Outcome } from './components/Result'
 import { lemonInfo } from './data/lemonDiseases'
 import { plantVillageInfo } from './data/plantVillageDiseases'
@@ -23,7 +26,7 @@ import { allModelsCached } from './utils/offlineCheck'
 type Screen =
   | { s: 'home' }
   | { s: 'capture' }
-  | { s: 'processing'; photo: string; step: string }
+  | { s: 'processing'; photo: string; step: string; stage: 0 | 1 | 2 }
   | { s: 'choose'; photo: string; suggestions: Plant[]; reason: 'unsure' | 'change' }
   | { s: 'result'; photo: string; plant: Plant | null; suggestions: Plant[]; outcome: Outcome }
   | { s: 'history' }
@@ -39,13 +42,30 @@ const pvName = (label: string) => {
 }
 const lemonName = (label: string) => lemonInfo(label)?.name ?? label
 const historyName = (crop: string, label: string) => (crop === 'Lemon' ? lemonName(label) : pvName(label))
+const historyTone = (crop: string, label: string): Tone => {
+  const sev = (crop === 'Lemon' ? lemonInfo(label) : plantVillageInfo(label))?.severity
+  return sev === 'none' ? 'healthy' : sev === 'low' || !sev ? 'minor' : 'attention'
+}
+const STAGES = ['Check the photo', 'Identify the plant', 'Look for problems']
+// how deep each screen sits, so screen changes slide forward or back
+const DEPTH: Record<Screen['s'], number> = { home: 0, capture: 1, history: 1, about: 1, account: 1, processing: 2, choose: 2, privacy: 2, result: 3 }
+const prefersReducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches
 const TIPS = ['Daylight, out of harsh sun', 'One leaf, filling the square', 'Hold still until it’s sharp']
 const paint = () => new Promise((r) => setTimeout(r, 30)) // let the progress text render
 
 export default function App() {
   const { models, state } = useModels()
   const auth = useAuth()
-  const [screen, setScreen] = useState<Screen>({ s: 'home' })
+  const [screen, setScreenNow] = useState<Screen>({ s: 'home' })
+  // the screen being shown or about to be (a view transition applies it a frame later)
+  const want = useRef<Screen>(screen)
+  const setScreen = (next: Screen) => {
+    const from = want.current.s
+    want.current = next
+    if (from === next.s || !document.startViewTransition || prefersReducedMotion()) return setScreenNow(next)
+    document.documentElement.dataset.nav = DEPTH[next.s] >= DEPTH[from] ? 'forward' : 'back'
+    document.startViewTransition(() => flushSync(() => setScreenNow(want.current)))
+  }
   const [online, setOnline] = useState(navigator.onLine)
   const [offlineReady, setOfflineReady] = useState(false)
   // what is being checked: the frames analysed + a still for thumbnails (kept for "Change plant")
@@ -74,7 +94,7 @@ export default function App() {
     if (screen.s === 'home' && history.state?.cg === true) history.back()
   }, [screen.s])
   useEffect(() => {
-    const onPop = () => setScreen((cur) => (cur.s === 'processing' ? cur : { s: 'home' }))
+    const onPop = () => { if (want.current.s !== 'processing') setScreen({ s: 'home' }) }
     addEventListener('popstate', onPop)
     return () => removeEventListener('popstate', onPop)
   }, [])
@@ -105,7 +125,7 @@ export default function App() {
   const check = async (photo: string, plant: Plant, suggestions: Plant[]) => {
     const image = img.current
     if (!image) return setScreen({ s: 'home' })
-    setScreen({ s: 'processing', photo, step: `Checking the ${plantName(plant).toLowerCase()} leaf…` })
+    setScreen({ s: 'processing', photo, step: `Checking the ${plantName(plant).toLowerCase()} leaf…`, stage: 2 })
     await paint()
     let outcome: Outcome
     try {
@@ -148,7 +168,7 @@ export default function App() {
   /** New photo or video: quality check → identify the plant → check, or ask which plant. */
   const analyze = async (c: Captured) => {
     const first = c.kind === 'photos' ? c.imgs[0] : c.preview
-    setScreen({ s: 'processing', photo: first.src, step: c.kind === 'video' ? 'Picking the sharpest frames…' : c.imgs.length > 1 ? `Looking at ${c.imgs.length} photos…` : 'Looking at the photo…' })
+    setScreen({ s: 'processing', photo: first.src, step: c.kind === 'video' ? 'Picking the sharpest frames…' : c.imgs.length > 1 ? `Looking at ${c.imgs.length} photos…` : 'Looking at the photo…', stage: 0 })
     await paint()
     try {
       let image: NonNullable<typeof img.current>
@@ -171,7 +191,7 @@ export default function App() {
       img.current = image
       const router = models['router-v2']
       if (!router) return setScreen({ s: 'choose', photo, suggestions: [], reason: 'unsure' })
-      setScreen({ s: 'processing', photo, step: 'Working out which plant this is…' })
+      setScreen({ s: 'processing', photo, step: 'Working out which plant this is…', stage: 1 })
       await paint()
       const id = await identifyPlant(router, image.frames, image.input.combine)
       if (id.plant) await check(photo, id.plant, id.suggestions)
@@ -192,16 +212,28 @@ export default function App() {
           onAbout={() => setScreen({ s: 'about' })}
           onAccount={() => setScreen({ s: 'account' })}
           displayName={historyName}
+          tone={historyTone}
+          signedIn={auth.status === 'signed-in' ? auth.user?.email ?? '' : null}
         />
       )
     case 'capture':
       return <Capture tips={TIPS} onBack={() => setScreen({ s: 'home' })} onAnalyze={analyze} />
     case 'processing':
       return (
-        <section className="screen analysing" aria-live="polite">
+        <section className="screen analysing">
           <div className="topbar" />
-          <img src={screen.photo} alt="" />
-          <p className="status wait"><span className="spinner" aria-hidden />{screen.step}</p>
+          <div className="scan"><img src={screen.photo} alt="" /></div>
+          <div className="stack">
+            <h1>Checking your leaf</h1>
+            <p className="status wait" aria-live="polite"><span className="spinner" aria-hidden /><span key={screen.step} className="step-text">{screen.step}</span></p>
+          </div>
+          <ol className="steps-list" aria-label="Progress">
+            {STAGES.map((t, i) => (
+              <li key={t} className={i < screen.stage ? 'done' : i === screen.stage ? 'now' : ''} aria-current={i === screen.stage ? 'step' : undefined}>
+                <span className="dot">{i < screen.stage ? <Check size={14} weight="bold" aria-hidden /> : null}</span>{t}
+              </li>
+            ))}
+          </ol>
         </section>
       )
     case 'choose':
@@ -233,6 +265,6 @@ export default function App() {
     case 'privacy':
       return <Privacy onBack={() => setScreen(screen.from === 'account' ? { s: 'account' } : { s: 'home' })} />
     case 'history':
-      return <History onBack={() => setScreen({ s: 'home' })} displayName={historyName} />
+      return <History onBack={() => setScreen({ s: 'home' })} displayName={historyName} tone={historyTone} />
   }
 }
