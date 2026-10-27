@@ -30,7 +30,7 @@ Do **not** enable anonymous sign-ins or social providers unless you add them del
    Project Settings → API. Never use the `service_role` / secret key.
 2. Run `node scripts/set-auth-csp.mjs`. It adds your exact project URL to the Content-Security-Policy
    (the build refuses to run until this is done).
-3. In Vercel → Project → Settings → Environment Variables, add the same two variables.
+3. In Vercel, nothing to add if the Supabase integration is connected: the build reads its `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (only those two; see `vite.config.ts`). Otherwise add the same two `VITE_` variables under Project → Settings → Environment Variables.
 4. Commit `security-headers.json` and `vercel.json`, then push.
 
 ## 4. Check it yourself

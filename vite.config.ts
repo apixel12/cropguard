@@ -34,6 +34,14 @@ function modelIntegrity(): Plugin {
   }
 }
 
+// On Vercel, the Supabase integration provides the project URL and publishable key under
+// Next.js names. Map exactly those two public values; never widen envPrefix, which would
+// also expose the integration's secret keys to the browser bundle.
+const INTEGRATION_ENV = { VITE_SUPABASE_URL: 'NEXT_PUBLIC_SUPABASE_URL', VITE_SUPABASE_ANON_KEY: 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY' }
+for (const [ours, theirs] of Object.entries(INTEGRATION_ENV)) {
+  if (!process.env[ours] && process.env[theirs]) process.env[ours] = process.env[theirs]
+}
+
 // Accounts are optional; if a Supabase project is configured, the CSP must allow exactly
 // that origin, otherwise sign-in would silently fail (or someone might loosen the CSP by hand).
 function assertAuthCsp(): Plugin {
