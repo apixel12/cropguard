@@ -1,4 +1,4 @@
-import { Camera, CheckCircle, ClockCounterClockwise, CloudArrowDown, Leaf, WarningCircle } from '@phosphor-icons/react'
+import { ArrowsClockwise, Camera, CheckCircle, ClockCounterClockwise, CloudArrowDown, Leaf, WarningCircle } from '@phosphor-icons/react'
 import { authConfigured } from '../auth/client'
 import { useEffect, useState } from 'react'
 import { listScans, type ScanRecord } from '../db/history'
@@ -7,6 +7,7 @@ import type { ModelId } from '../ml/modelRegistry'
 import { PV_CROPS } from '../ml/plantVillageClassifier'
 import { ScanRow, type Tone } from './History'
 import { ModeSwitch } from '../hooks/useMode'
+import { useAppUpdate } from '../utils/appUpdate'
 
 interface Props {
   onScan: () => void
@@ -39,6 +40,7 @@ function HeroArt() {
 
 export default function Home({ onScan, onHistory, onAbout, onAccount, online, offlineReady, displayName, tone, signedIn }: Props) {
   const { state, retry } = useModels()
+  const update = useAppUpdate()
   const ready = IDS.every((id) => state[id].status === 'ready')
   const failed = IDS.filter((id) => state[id].status === 'error')
   const [recent, setRecent] = useState<ScanRecord[]>([])
@@ -63,6 +65,16 @@ export default function Home({ onScan, onHistory, onAbout, onAccount, online, of
             : <button className="chip-btn" onClick={onAccount}>Sign in</button>)}
         </span>
       </div>
+
+      {update && (
+        <div className="callout ok" role="status">
+          <ArrowsClockwise size={20} weight="bold" aria-hidden />
+          <div>
+            <b>A new version of CropGuard is ready.</b> It takes a few seconds and keeps your history.
+            <button className="btn primary" onClick={update}>Update now</button>
+          </div>
+        </div>
+      )}
 
       <div className="hero">
         <HeroArt />

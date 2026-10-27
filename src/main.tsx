@@ -6,6 +6,7 @@ import { ModelProvider } from './hooks/useModels'
 import { ModeProvider } from './hooks/useMode'
 import { AuthProvider } from './auth/AuthProvider'
 import { installNetworkGuard } from './utils/networkGuard'
+import { offerUpdate } from './utils/appUpdate'
 import '@fontsource/public-sans/latin-400.css'
 import '@fontsource/public-sans/latin-500.css'
 import '@fontsource/public-sans/latin-600.css'
@@ -13,7 +14,7 @@ import '@fontsource/public-sans/latin-700.css'
 import './styles.css'
 
 installNetworkGuard()
-registerSW({ immediate: true })
+const updateSW = registerSW({ immediate: true, onNeedRefresh: () => offerUpdate(() => updateSW(true)) })
 
 createRoot(document.getElementById('root')!).render(
   <ModelProvider>
