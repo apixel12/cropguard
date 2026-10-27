@@ -3,8 +3,6 @@
 **Offline plant-leaf disease screening that runs entirely on your phone.**
 Take a photo or a short video of a leaf. CropGuard works out which of 21 plants it is, then a model on the device identifies the likely condition, says how confident it is, explains what the condition means, and suggests conservative next steps. No upload and no signal needed after the first visit; an account is optional (it only syncs results, never photos). All of this completely free.
 
-Built for Impact Hacks 2026.
-
 **Data credit:** the models are trained on public datasets made by others: the Bangladesh lemon-leaf dataset, PlantVillage (Hughes & Salathé), iBean (Makerere AI Lab / NaCRRI), PlantDoc, iCassava 2019, rice (Sethy et al.; RiceLeafBD), wheat (John Innes Centre; Holeta, Ethiopia), cotton (two Mendeley sets) and sugarcane (Daphal & Koli). Full citations, licences, what we changed, and per-image manifests are in [DATA_SOURCES.md](DATA_SOURCES.md).
 
 > CropGuard is an AI **screening** tool, not a diagnosis. Results should be confirmed by an agricultural extension office or plant specialist.
