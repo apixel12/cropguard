@@ -18,7 +18,7 @@ and see them on other devices.
 | Policies → Password: required characters | None | NIST advises against composition rules |
 | Multi-Factor → TOTP (authenticator app) | Enabled | Optional two-factor for users |
 | Rate Limits | Keep defaults or lower | Server-side brute-force protection |
-| URL Configuration → Site URL | Your Vercel URL, e.g. `https://cropguard.vercel.app` | Where email links return |
+| URL Configuration → Site URL | Your Vercel URL, e.g. `https://cropguard-olive.vercel.app` | Where email links return |
 | URL Configuration → Redirect URLs | The same URL (and `http://localhost:5173` for development) | Only these may receive login codes |
 | Attack Protection → CAPTCHA | Optional (Cloudflare Turnstile is free) | Bot sign-ups; needs CSP changes, not enabled by default |
 | Leaked password protection | Pro plan only; the app checks breached passwords itself | |
