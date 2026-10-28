@@ -15,6 +15,11 @@ import './styles.css'
 
 installNetworkGuard()
 const updateSW = registerSW({ immediate: true, onNeedRefresh: () => offerUpdate(() => updateSW(true)) })
+// The new version activates by itself (skipWaiting); offer a reload to start using it.
+// Only when this page was already controlled, so a first visit doesn't show the banner.
+if (navigator.serviceWorker?.controller) {
+  navigator.serviceWorker.addEventListener('controllerchange', () => offerUpdate(() => location.reload()), { once: true })
+}
 
 createRoot(document.getElementById('root')!).render(
   <ModelProvider>

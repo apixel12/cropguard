@@ -64,7 +64,7 @@ export default defineConfig({
     modelIntegrity(),
     assertAuthCsp(),
     VitePWA({
-      registerType: 'prompt', // never reload mid-scan: a new version takes over on next launch
+      registerType: 'prompt', // never reload by itself mid-scan; Home offers a reload once a new version is active
       includeAssets: ['icons/*.png', 'icons/*.svg', 'plants/*.jpg', ...modelFiles],
       manifest: {
         name: 'CropGuard',
@@ -86,6 +86,11 @@ export default defineConfig({
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/\.well-known\//], // security.txt must stay a text file
         cleanupOutdatedCaches: true,
+        // A new version activates as soon as it is installed instead of waiting for every tab
+        // (or the home-screen app) to close, which left phones on old versions for days.
+        // The open page keeps running its current code; only the next load uses the new one.
+        skipWaiting: true,
+        clientsClaim: true,
         // one self-contained sw.js: the CSP's Trusted Types rule (sent with sw.js too)
         // blocks importScripts(), which the default split Workbox runtime relies on
         inlineWorkboxRuntime: true,
