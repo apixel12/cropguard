@@ -65,7 +65,7 @@ export default defineConfig({
     assertAuthCsp(),
     VitePWA({
       registerType: 'prompt', // never reload mid-scan: a new version takes over on next launch
-      includeAssets: ['icons/*.png', 'icons/*.svg', ...modelFiles],
+      includeAssets: ['icons/*.png', 'icons/*.svg', 'plants/*.jpg', ...modelFiles],
       manifest: {
         name: 'CropGuard',
         short_name: 'CropGuard',

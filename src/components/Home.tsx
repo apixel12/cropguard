@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react'
 import { listScans, type ScanRecord } from '../db/history'
 import { useModels } from '../hooks/useModels'
 import type { ModelId } from '../ml/modelRegistry'
-import { PV_CROPS } from '../ml/plantVillageClassifier'
 import { ScanRow, type Tone } from './History'
+import PlantShow from './PlantShow'
 import { ModeSwitch } from '../hooks/useMode'
 import { useAppUpdate } from '../utils/appUpdate'
 
@@ -23,7 +23,6 @@ interface Props {
 }
 
 const IDS: ModelId[] = ['router-v2', 'lemon-v1', 'crops-v2']
-const PLANTS = ['Lemon', ...PV_CROPS.map((c) => c.name)]
 
 /** A big leaf, drawn in once behind the headline. */
 function HeroArt() {
@@ -115,7 +114,7 @@ export default function Home({ onScan, onHistory, onAbout, onAccount, online, of
 
       <div className="stack-sm">
         <h2 className="section-title">Works with</h2>
-        <ul className="chips" aria-label="Plants CropGuard knows">{PLANTS.map((p) => <li key={p}>{p}</li>)}</ul>
+        <PlantShow onCredits={onAbout} />
       </div>
 
       <div>

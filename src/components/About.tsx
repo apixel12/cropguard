@@ -1,5 +1,6 @@
 import { ArrowLeft } from '@phosphor-icons/react'
 import { useModels } from '../hooks/useModels'
+import { PLANT_PHOTOS } from '../data/plantPhotos'
 import type { ModelId } from '../ml/modelRegistry'
 
 const pctOf = (v: unknown) => (typeof v === 'number' ? `${(v * 100).toFixed(1)}%` : '—')
@@ -59,7 +60,16 @@ export default function About({ onBack }: { onBack: () => void }) {
             <li>Sugarcane: Daphal &amp; Koli 2022 (Mendeley Data, CC BY 4.0).</li>
             <li>Cassava: iCassava 2019, Makerere AI Lab and NaCRRI (Mwebaze et al. 2019).</li>
             <li>Beans: iBean, Makerere AI Lab with Uganda’s National Crops Resources Research Institute (MIT).</li>
-            <li>Model: MobileNetV2 (Sandler et al. 2018). Typeface: Public Sans (SIL OFL). Icons: Phosphor (MIT).</li>
+            <li>Model: MobileNetV2 (Sandler et al. 2018). Typefaces: Public Sans and Fraunces (SIL OFL). Icons: Phosphor (MIT).</li>
+          </ul>
+        </section>
+        <section id="photo-credits">
+          <h3>Plant photos on the home screen</h3>
+          <p className="caption">From Wikimedia Commons, resized. Tap a name to see the original and its licence.</p>
+          <ul className="bullets caption">
+            {PLANT_PHOTOS.map((p) => (
+              <li key={p.name}><a className="text-link inline" href={p.page} target="_blank" rel="noopener noreferrer">{p.name}</a>: {p.credit}, {p.license}</li>
+            ))}
           </ul>
         </section>
         <section>
