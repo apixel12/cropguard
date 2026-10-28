@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
-import { ArrowClockwise, ArrowLeft, ImageSquare, Plus, VideoCamera, X } from '@phosphor-icons/react'
+import { ArrowClockwise, ArrowLeft, CornersOut, ImageSquare, Images, Plus, Sun, VideoCamera, X } from '@phosphor-icons/react'
 import { chooseFrames, framesFromStream, framesFromVideoFile, type Source } from '../ml/frames'
 
 /** What the user captured: one or more photos of the same plant, or frames sampled from a video. */
@@ -10,8 +10,15 @@ export type Captured = { kind: 'photos'; imgs: HTMLImageElement[] } | { kind: 'v
 export const MAX_PHOTOS = 5
 const isVideoFile = (f: File) => f.type.startsWith('video/') || (!f.type && /\.(mp4|m4v|mov|webm|3gp|mkv)$/i.test(f.name))
 
+/** How to get a reliable check with today's options: several photos, a short video, or the library. */
+const tips = (camera: boolean) => [
+  { icon: <Sun size={20} aria-hidden />, text: 'Daylight, out of harsh sun' },
+  { icon: <CornersOut size={20} aria-hidden />, text: 'One leaf filling the square, held still' },
+  { icon: <Images size={20} aria-hidden />, text: `Most reliable: 2 or 3 photos of the same plant, or ${camera ? 'tap Video for a 3-second clip' : 'a short video'}` },
+  ...(camera ? [{ icon: <ImageSquare size={20} aria-hidden />, text: 'Already have photos or a video? Use Library' }] : []),
+]
+
 interface Props {
-  tips: string[]
   onBack: () => void
   onAnalyze: (c: Captured) => void
 }
@@ -48,7 +55,7 @@ export function loadImage(blob: Blob): Promise<HTMLImageElement> {
   })
 }
 
-export default function Capture({ tips, onBack, onAnalyze }: Props) {
+export default function Capture({ onBack, onAnalyze }: Props) {
   const video = useRef<HTMLVideoElement>(null)
   const fileInput = useRef<HTMLInputElement>(null)
   const stream = useRef<MediaStream | null>(null)
@@ -313,7 +320,7 @@ export default function Capture({ tips, onBack, onAnalyze }: Props) {
         <>
           {adding
             ? <p className="hint">Photo {shots.length + 1} of up to {MAX_PHOTOS}: another leaf of the same plant, or the same leaf from a different angle.</p>
-            : <ul className="bullets hint">{tips.map((t) => <li key={t}>{t}</li>)}</ul>}
+            : <ul className="tips stagger">{tips(cam === 'live').map((t) => <li key={t.text}><span className="tip-icon">{t.icon}</span>{t.text}</li>)}</ul>}
           {cam === 'live' ? (
             <div className="capture-bar">
               <button className="gallery-btn" onClick={() => fileInput.current?.click()}><ImageSquare size={24} aria-hidden />Library</button>

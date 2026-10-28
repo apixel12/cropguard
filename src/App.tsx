@@ -50,7 +50,6 @@ const STAGES = ['Check the photo', 'Identify the plant', 'Look for problems']
 // how deep each screen sits, so screen changes slide forward or back
 const DEPTH: Record<Screen['s'], number> = { home: 0, capture: 1, history: 1, about: 1, account: 1, processing: 2, choose: 2, privacy: 2, result: 3 }
 const prefersReducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches
-const TIPS = ['Daylight, out of harsh sun', 'One leaf, filling the square', 'Hold still until it’s sharp']
 const paint = () => new Promise((r) => setTimeout(r, 30)) // let the progress text render
 
 export default function App() {
@@ -217,7 +216,7 @@ export default function App() {
         />
       )
     case 'capture':
-      return <Capture tips={TIPS} onBack={() => setScreen({ s: 'home' })} onAnalyze={analyze} />
+      return <Capture onBack={() => setScreen({ s: 'home' })} onAnalyze={analyze} />
     case 'processing':
       return (
         <section className="screen analysing">

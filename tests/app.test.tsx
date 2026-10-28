@@ -14,7 +14,7 @@ describe('camera fallback', () => {
       configurable: true,
       value: { getUserMedia: vi.fn().mockRejectedValue(new DOMException('denied', 'NotAllowedError')) },
     })
-    render(<Capture tips={["t"]} onBack={() => {}} onAnalyze={() => {}} />)
+    render(<Capture onBack={() => {}} onAnalyze={() => {}} />)
     expect(await screen.findByText('Camera not available')).toBeTruthy()
     const gallery = screen.getByText('Choose photos or a video')
     expect(gallery).toBeTruthy()
