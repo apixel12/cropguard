@@ -53,9 +53,9 @@ export const FEEDS: Feed[] = [
   { source: 'IRRI', region: 'Philippines', topic: 'research', url: 'https://www.irri.org/rss.xml' },
 ]
 
-const PER_FEED = 8
-const MAX_ITEMS = 260 // above FEEDS × PER_FEED, so every feed keeps its stories and busy feeds can't crowd others out
-const MAX_AGE_DAYS = 30
+const PER_FEED = 100 // feeds only list their latest stories; keep every one of them (100 is a safety cap)
+const MAX_ITEMS = 1500 // safety cap only: ~30 feeds list ~500 stories a fortnight
+const MAX_AGE_DAYS = 14
 const MAX_FEED_BYTES = 3 * 1024 * 1024
 const SUMMARY_CHARS = 220
 const UA = 'CropGuard/1.0 (+https://cropguard-olive.vercel.app; plant-health app, headline reader)'
@@ -106,7 +106,7 @@ function atomLink(link: unknown): string | null {
   return null
 }
 
-/** Parse one RSS 2.0 or Atom document into news items (newest first, at most PER_FEED). */
+/** Parse one RSS 2.0, RDF or Atom document into news items, newest first. */
 export function parseFeed(xml: string, feed: Feed, now = Date.now()): NewsItem[] {
   const doc = parser.parse(xml) as Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
   const rss = list(doc?.rss?.channel?.item ?? doc?.['rdf:RDF']?.item)
@@ -155,7 +155,8 @@ export async function GET(): Promise<Response> {
   if (!items.length) return new Response(JSON.stringify({ error: 'No news sources answered. Try again later.' }), { status: 502, headers: { ...headers, 'Cache-Control': 'no-store' } })
   return new Response(JSON.stringify({ updated: new Date().toISOString(), sources: ok.length, items }), {
     status: 200,
-    // the CDN refreshes at most every 30 min, so feeds see a handful of requests a day
-    headers: { ...headers, 'Cache-Control': 'public, max-age=300, s-maxage=1800, stale-while-revalidate=86400' },
+    // New articles appear within about 5 minutes: the CDN keeps one copy for 5 min (so feeds
+    // get at most ~12 requests an hour however many people read), browsers always revalidate.
+    headers: { ...headers, 'Cache-Control': 'public, max-age=0, s-maxage=300, stale-while-revalidate=300' },
   })
 }

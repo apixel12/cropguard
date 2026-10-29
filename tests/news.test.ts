@@ -18,6 +18,11 @@ describe('news feeds', () => {
     expect(items[0]).toMatchObject({ source: 'Test', region: 'Global', topic: 'farming', url: 'https://example.org/b' })
   })
 
+  it('keeps every recent story a feed lists, not just the newest few', () => {
+    const items = Array.from({ length: 25 }, (_, k) => `<item><title>Story ${k}</title><link>https://example.org/${k}</link><pubDate>${new Date(NOW - k * 36e5).toUTCString()}</pubDate></item>`).join('')
+    expect(parseFeed(rss(items), feed, NOW)).toHaveLength(25)
+  })
+
   it('reads Atom and RDF feeds', () => {
     const atom = `<feed xmlns="http://www.w3.org/2005/Atom"><entry><title>Atom story</title><link rel="alternate" href="https://example.org/atom"/><published>2026-10-27T08:00:00Z</published><summary>Hi</summary></entry></feed>`
     expect(parseFeed(atom, feed, NOW)[0]).toMatchObject({ title: 'Atom story', url: 'https://example.org/atom' })

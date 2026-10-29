@@ -1,9 +1,12 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowClockwise, ArrowUpRight, CloudSlash, Leaf, Newspaper, WarningCircle } from '@phosphor-icons/react'
 
 type Topic = 'farming' | 'gardening' | 'research'
 interface NewsItem { id: string; title: string; url: string; summary: string; published: string; source: string; region: string; topic: Topic }
 interface NewsData { updated: string; items: NewsItem[] }
+
+const REFRESH_MS = 5 * 60 * 1000 // matches the server's 5-minute cache
+const PAGE = 30
 
 const TOPICS: { id: Topic | 'all'; label: string }[] = [
   { id: 'all', label: 'All' },
@@ -41,7 +44,7 @@ function valid(j: unknown): NewsData | null {
   return { updated: d.updated, items }
 }
 
-function Story({ item, lead }: { item: NewsItem; lead?: boolean }) {
+function Story({ item, lead, fresh }: { item: NewsItem; lead?: boolean; fresh?: boolean }) {
   return (
     <a className={`story ${lead ? 'lead' : ''}`} href={item.url} target="_blank" rel="noopener noreferrer">
       <span className="story-meta">
@@ -50,6 +53,7 @@ function Story({ item, lead }: { item: NewsItem; lead?: boolean }) {
         <span>{item.region}</span>
         <span aria-hidden>·</span>
         <time dateTime={item.published}>{ago(item.published)}</time>
+        {fresh && <span className="new-tag">New</span>}
       </span>
       <span className="story-title">{item.title}</span>
       {item.summary && <span className="story-sum">{item.summary}</span>}
@@ -63,13 +67,21 @@ export default function News() {
   const [state, setState] = useState<'loading' | 'ok' | 'error'>('loading')
   const [topic, setTopic] = useState<Topic | 'all'>('all')
   const [online, setOnline] = useState(navigator.onLine)
+  const [fresh, setFresh] = useState<Set<string>>(new Set()) // stories that arrived since the last refresh
+  const [shown, setShown] = useState(PAGE)
+  const seen = useRef<Set<string> | null>(null)
+  const lastLoad = useRef(0)
 
   const load = async () => {
     setState('loading')
+    lastLoad.current = Date.now()
     try {
-      const r = await fetch('/api/news', { headers: { Accept: 'application/json' } })
+      const r = await fetch('/api/news', { headers: { Accept: 'application/json' }, cache: 'no-cache' })
       const d = r.ok ? valid(await r.json()) : null
       if (!d) throw new Error('bad response')
+      const ids = d.items.map((i) => i.id)
+      if (seen.current) setFresh(new Set(ids.filter((id) => !seen.current!.has(id))))
+      seen.current = new Set([...(seen.current ?? []), ...ids])
       setData(d)
       setState('ok')
     } catch {
@@ -77,6 +89,15 @@ export default function News() {
     }
   }
   useEffect(() => { load() }, [])
+  // Keep checking for new stories while News is open, and as soon as the app comes back to the foreground.
+  useEffect(() => {
+    const tick = () => { if (document.visibilityState === 'visible' && Date.now() - lastLoad.current >= REFRESH_MS - 1000) load() }
+    const t = setInterval(tick, 60 * 1000)
+    const vis = () => { if (document.visibilityState === 'visible' && Date.now() - lastLoad.current > 2 * 60 * 1000) load() }
+    document.addEventListener('visibilitychange', vis)
+    return () => { clearInterval(t); document.removeEventListener('visibilitychange', vis) }
+  }, [])
+  useEffect(() => setShown(PAGE), [topic])
   useEffect(() => {
     const on = () => setOnline(true), off = () => setOnline(false)
     addEventListener('online', on); addEventListener('offline', off)
@@ -128,11 +149,17 @@ export default function News() {
 
       {data && (
         <>
+          {fresh.size > 0 && (
+            <p className="callout ok fresh-note" role="status">{fresh.size} new {fresh.size === 1 ? 'story' : 'stories'} since you last looked, marked New.</p>
+          )}
           <div id="stories" className="stories stagger" key={topic} role="tabpanel">
-            {items.length ? items.map((i, k) => <Story key={i.id} item={i} lead={k === 0} />) : <p className="caption">No recent stories in this topic.</p>}
+            {items.length ? items.slice(0, shown).map((i, k) => <Story key={i.id} item={i} lead={k === 0} fresh={fresh.has(i.id)} />) : <p className="caption">No recent stories in this topic.</p>}
           </div>
+          {items.length > shown && (
+            <button className="btn full" onClick={() => setShown(shown + PAGE)}>Show more stories ({items.length - shown} more)</button>
+          )}
           <p className="fine-print news-foot">
-            <Newspaper size={16} aria-hidden /> {sources} sources · updated {ago(data.updated)}. Headlines and short excerpts belong to their publishers; CropGuard doesn’t check or endorse them.
+            <Newspaper size={16} aria-hidden /> {data.items.length} stories from the last two weeks, {sources} publishers · updated {ago(data.updated)}, checks for new ones every few minutes. Headlines and short excerpts belong to their publishers; CropGuard doesn’t check or endorse them.
           </p>
         </>
       )}
