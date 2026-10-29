@@ -11,6 +11,8 @@ import { chooseFrames, type Source } from './ml/frames'
 import ChoosePlant from './components/ChoosePlant'
 import History from './components/History'
 import Home from './components/Home'
+import News from './components/News'
+import TabBar from './components/TabBar'
 import type { Tone } from './components/History'
 import Result, { type Input, type Outcome } from './components/Result'
 import { lemonInfo } from './data/lemonDiseases'
@@ -25,6 +27,7 @@ import { allModelsCached } from './utils/offlineCheck'
 
 type Screen =
   | { s: 'home' }
+  | { s: 'news' }
   | { s: 'capture' }
   | { s: 'processing'; photo: string; step: string; stage: 0 | 1 | 2 }
   | { s: 'choose'; photo: string; suggestions: Plant[]; reason: 'unsure' | 'change' }
@@ -48,7 +51,7 @@ const historyTone = (crop: string, label: string): Tone => {
 }
 const STAGES = ['Check the photo', 'Identify the plant', 'Look for problems']
 // how deep each screen sits, so screen changes slide forward or back
-const DEPTH: Record<Screen['s'], number> = { home: 0, capture: 1, history: 1, about: 1, account: 1, processing: 2, choose: 2, privacy: 2, result: 3 }
+const DEPTH: Record<Screen['s'], number> = { home: 0, news: 0, capture: 1, history: 1, about: 1, account: 1, processing: 2, choose: 2, privacy: 2, result: 3 }
 const prefersReducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches
 const paint = () => new Promise((r) => setTimeout(r, 30)) // let the progress text render
 
@@ -62,7 +65,7 @@ export default function App() {
     const from = want.current.s
     want.current = next
     if (from === next.s || !document.startViewTransition || prefersReducedMotion()) return setScreenNow(next)
-    document.documentElement.dataset.nav = DEPTH[next.s] >= DEPTH[from] ? 'forward' : 'back'
+    document.documentElement.dataset.nav = DEPTH[next.s] === 0 && DEPTH[from] === 0 ? 'tab' : DEPTH[next.s] >= DEPTH[from] ? 'forward' : 'back'
     document.startViewTransition(() => flushSync(() => setScreenNow(want.current)))
   }
   const [online, setOnline] = useState(navigator.onLine)
@@ -200,70 +203,80 @@ export default function App() {
     }
   }
 
-  switch (screen.s) {
-    case 'home':
-      return (
-        <Home
-          online={online}
-          offlineReady={offlineReady}
-          onScan={() => setScreen({ s: 'capture' })}
-          onHistory={() => setScreen({ s: 'history' })}
-          onAbout={() => setScreen({ s: 'about' })}
-          onAccount={() => setScreen({ s: 'account' })}
-          displayName={historyName}
-          tone={historyTone}
-          signedIn={auth.status === 'signed-in' ? auth.user?.email ?? '' : null}
-        />
-      )
-    case 'capture':
-      return <Capture onBack={() => setScreen({ s: 'home' })} onAnalyze={analyze} />
-    case 'processing':
-      return (
-        <section className="screen analysing">
-          <div className="topbar" />
-          <div className="scan"><img src={screen.photo} alt="" /></div>
-          <div className="stack">
-            <h1>Checking your leaf</h1>
-            <p className="status wait" aria-live="polite"><span className="spinner" aria-hidden /><span key={screen.step} className="step-text">{screen.step}</span></p>
-          </div>
-          <ol className="steps-list" aria-label="Progress">
-            {STAGES.map((t, i) => (
-              <li key={t} className={i < screen.stage ? 'done' : i === screen.stage ? 'now' : ''} aria-current={i === screen.stage ? 'step' : undefined}>
-                <span className="dot">{i < screen.stage ? <Check size={14} weight="bold" aria-hidden /> : null}</span>{t}
-              </li>
-            ))}
-          </ol>
-        </section>
-      )
-    case 'choose':
-      return (
-        <ChoosePlant
-          photo={screen.photo}
-          suggestions={screen.suggestions}
-          reason={screen.reason}
-          onPick={(p) => check(screen.photo, p, screen.suggestions)}
-          onBack={() => setScreen({ s: 'home' })}
-        />
-      )
-    case 'result':
-      return (
-        <Result
-          photo={screen.photo}
-          outcome={screen.outcome}
-          plant={screen.plant}
-          displayName={screen.plant?.kind === 'lemon' ? lemonName : pvName}
-          onChangePlant={screen.plant ? () => setScreen({ s: 'choose', photo: screen.photo, suggestions: screen.suggestions, reason: 'change' }) : undefined}
-          onHome={() => setScreen({ s: 'home' })}
-          onRetake={() => setScreen({ s: 'capture' })}
-        />
-      )
-    case 'about':
-      return <About onBack={() => setScreen({ s: 'home' })} />
-    case 'account':
-      return <Account onBack={() => setScreen({ s: 'home' })} onPrivacy={() => setScreen({ s: 'privacy', from: 'account' })} />
-    case 'privacy':
-      return <Privacy onBack={() => setScreen(screen.from === 'account' ? { s: 'account' } : { s: 'home' })} />
-    case 'history':
-      return <History onBack={() => setScreen({ s: 'home' })} displayName={historyName} tone={historyTone} />
+  // Check and News are the two top-level tabs; everything else is a step inside Check
+  const content = renderScreen()
+  return screen.s === 'home' || screen.s === 'news'
+    ? <>{content}<TabBar tab={screen.s} onTab={(t) => setScreen({ s: t })} /></>
+    : content
+
+  function renderScreen() {
+    switch (screen.s) {
+      case 'news':
+        return <News />
+      case 'home':
+        return (
+          <Home
+            online={online}
+            offlineReady={offlineReady}
+            onScan={() => setScreen({ s: 'capture' })}
+            onHistory={() => setScreen({ s: 'history' })}
+            onAbout={() => setScreen({ s: 'about' })}
+            onAccount={() => setScreen({ s: 'account' })}
+            displayName={historyName}
+            tone={historyTone}
+            signedIn={auth.status === 'signed-in' ? auth.user?.email ?? '' : null}
+          />
+        )
+      case 'capture':
+        return <Capture onBack={() => setScreen({ s: 'home' })} onAnalyze={analyze} />
+      case 'processing':
+        return (
+          <section className="screen analysing">
+            <div className="topbar" />
+            <div className="scan"><img src={screen.photo} alt="" /></div>
+            <div className="stack">
+              <h1>Checking your leaf</h1>
+              <p className="status wait" aria-live="polite"><span className="spinner" aria-hidden /><span key={screen.step} className="step-text">{screen.step}</span></p>
+            </div>
+            <ol className="steps-list" aria-label="Progress">
+              {STAGES.map((t, i) => (
+                <li key={t} className={i < screen.stage ? 'done' : i === screen.stage ? 'now' : ''} aria-current={i === screen.stage ? 'step' : undefined}>
+                  <span className="dot">{i < screen.stage ? <Check size={14} weight="bold" aria-hidden /> : null}</span>{t}
+                </li>
+              ))}
+            </ol>
+          </section>
+        )
+      case 'choose':
+        return (
+          <ChoosePlant
+            photo={screen.photo}
+            suggestions={screen.suggestions}
+            reason={screen.reason}
+            onPick={(p) => check(screen.photo, p, screen.suggestions)}
+            onBack={() => setScreen({ s: 'home' })}
+          />
+        )
+      case 'result':
+        return (
+          <Result
+            photo={screen.photo}
+            outcome={screen.outcome}
+            plant={screen.plant}
+            displayName={screen.plant?.kind === 'lemon' ? lemonName : pvName}
+            onChangePlant={screen.plant ? () => setScreen({ s: 'choose', photo: screen.photo, suggestions: screen.suggestions, reason: 'change' }) : undefined}
+            onHome={() => setScreen({ s: 'home' })}
+            onRetake={() => setScreen({ s: 'capture' })}
+          />
+        )
+      case 'about':
+        return <About onBack={() => setScreen({ s: 'home' })} />
+      case 'account':
+        return <Account onBack={() => setScreen({ s: 'home' })} onPrivacy={() => setScreen({ s: 'privacy', from: 'account' })} />
+      case 'privacy':
+        return <Privacy onBack={() => setScreen(screen.from === 'account' ? { s: 'account' } : { s: 'home' })} />
+      case 'history':
+        return <History onBack={() => setScreen({ s: 'home' })} displayName={historyName} tone={historyTone} />
+    }
   }
 }

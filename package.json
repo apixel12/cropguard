@@ -21,6 +21,7 @@
     "@tensorflow/tfjs-backend-webgl": "^4.22.0",
     "@tensorflow/tfjs-converter": "^4.22.0",
     "@tensorflow/tfjs-core": "^4.22.0",
+    "fast-xml-parser": "5.11.2",
     "idb": "^8.0.3",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"

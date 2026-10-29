@@ -1,6 +1,9 @@
 /// <reference types="vitest/config" />
 import { createHash } from 'node:crypto'
 import { readdirSync, readFileSync, existsSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
+import type { Connect } from 'vite'
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
@@ -58,11 +61,33 @@ function assertAuthCsp(): Plugin {
   }
 }
 
+// Serve /api/news locally too (Vercel runs api/news.ts in production), so `vite dev`
+// and `vite preview` behave like the deployed app.
+function newsApi(): Plugin {
+  const route = (load: () => Promise<{ GET: () => Promise<Response> }>): Connect.NextHandleFunction => async (req, res, next) => {
+    if (req.url?.split('?')[0] !== '/api/news') return next()
+    try {
+      const r = await (await load()).GET()
+      res.statusCode = r.status
+      r.headers.forEach((v, k) => res.setHeader(k, v))
+      res.end(Buffer.from(await r.arrayBuffer()))
+    } catch (e) {
+      next(e)
+    }
+  }
+  return {
+    name: 'news-api',
+    configureServer(server) { server.middlewares.use(route(() => server.ssrLoadModule('/api/news.ts') as never)) },
+    configurePreviewServer(server) { server.middlewares.use(route(() => import(pathToFileURL(resolve('api/news.ts')).href))) },
+  }
+}
+
 export default defineConfig({
   plugins: [
     react(),
     modelIntegrity(),
     assertAuthCsp(),
+    newsApi(),
     VitePWA({
       registerType: 'prompt', // never reload by itself mid-scan; Home offers a reload once a new version is active
       includeAssets: ['icons/*.png', 'icons/*.svg', 'plants/*.jpg', ...modelFiles],
@@ -94,6 +119,12 @@ export default defineConfig({
         // one self-contained sw.js: the CSP's Trusted Types rule (sent with sw.js too)
         // blocks importScripts(), which the default split Workbox runtime relies on
         inlineWorkboxRuntime: true,
+        // News: try the network, fall back to the last headlines when offline
+        runtimeCaching: [{
+          urlPattern: ({ url }) => url.pathname === '/api/news',
+          handler: 'NetworkFirst',
+          options: { cacheName: 'news', networkTimeoutSeconds: 8, expiration: { maxEntries: 1, maxAgeSeconds: 14 * 24 * 3600 } },
+        }],
       },
     }),
   ],

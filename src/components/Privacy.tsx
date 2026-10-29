@@ -28,6 +28,10 @@ export default function Privacy({ onBack }: { onBack: () => void }) {
           </ul>
         </section>
         <section>
+          <h3>News tab</h3>
+          <p>When you open News, the app asks CropGuard’s own server for the latest headlines, which it collects from public news feeds. Nothing about you, your photos or your results is sent. Tapping a story opens the publisher’s website, which has its own privacy policy.</p>
+        </section>
+        <section>
           <h3>Age</h3>
           <p>Accounts are for people aged 13 and older. Anyone can use CropGuard without an account.</p>
         </section>
