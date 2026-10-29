@@ -28,16 +28,33 @@ export const FEEDS: Feed[] = [
   { source: "Farmer's Weekly", region: 'South Africa', topic: 'farming', url: 'https://www.farmersweekly.co.za/feed/' },
   { source: 'Agriland', region: 'Ireland', topic: 'farming', url: 'https://www.agriland.ie/feed/' },
   { source: 'The Hindu', region: 'India', topic: 'farming', url: 'https://www.thehindu.com/sci-tech/agriculture/feeder/default.rss' },
-  { source: 'Mongabay', region: 'Global', topic: 'farming', url: 'https://news.mongabay.com/feed/?post_type=post&topic=agriculture' },
+  { source: 'AgFunderNews', region: 'Global', topic: 'farming', url: 'https://agfundernews.com/feed' },
+  { source: 'Food Tank', region: 'USA', topic: 'farming', url: 'https://www.foodtank.com/feed/' },
+  { source: 'Grain Central', region: 'Australia', topic: 'farming', url: 'https://www.graincentral.com/feed/' },
+  { source: 'RNZ Country', region: 'New Zealand', topic: 'farming', url: 'https://www.rnz.co.nz/rss/country.xml' },
+  { source: 'Farmers Review Africa', region: 'Africa', topic: 'farming', url: 'https://farmersreviewafrica.com/feed/' },
+  { source: 'Food For Mzansi', region: 'South Africa', topic: 'farming', url: 'https://www.foodformzansi.co.za/feed/' },
+  { source: 'BusinessLine', region: 'India', topic: 'farming', url: 'https://www.thehindubusinessline.com/economy/agri-business/feeder/default.rss' },
   { source: 'The Guardian', region: 'UK', topic: 'gardening', url: 'https://www.theguardian.com/lifeandstyle/gardens/rss' },
   { source: "Gardeners' World", region: 'UK', topic: 'gardening', url: 'https://www.gardenersworld.com/feed/' },
   { source: 'Gardening Know How', region: 'USA', topic: 'gardening', url: 'https://www.gardeningknowhow.com/feed' },
+  { source: 'Fine Gardening', region: 'USA', topic: 'gardening', url: 'https://www.finegardening.com/feed' },
+  { source: 'Garden Rant', region: 'USA', topic: 'gardening', url: 'https://gardenrant.com/feed' },
+  { source: 'Savvy Gardening', region: 'Canada', topic: 'gardening', url: 'https://savvygardening.com/feed/' },
+  { source: 'Amateur Gardening', region: 'UK', topic: 'gardening', url: 'https://www.amateurgardening.com/feed' },
+  { source: 'The English Garden', region: 'UK', topic: 'gardening', url: 'https://www.theenglishgarden.co.uk/feed/' },
   { source: 'Phys.org', region: 'Global', topic: 'research', url: 'https://phys.org/rss-feed/biology-news/agriculture/' },
   { source: 'ScienceDaily', region: 'Global', topic: 'research', url: 'https://www.sciencedaily.com/rss/plants_animals/agriculture_and_food.xml' },
+  { source: 'ScienceDaily', region: 'Global', topic: 'research', url: 'https://www.sciencedaily.com/rss/plants_animals/botany.xml' },
+  { source: 'ScienceDaily', region: 'Global', topic: 'research', url: 'https://www.sciencedaily.com/rss/plants_animals/soil_types.xml' },
+  { source: 'Nature Plants', region: 'Global', topic: 'research', url: 'https://www.nature.com/nplants.rss' },
+  { source: 'Nature Food', region: 'Global', topic: 'research', url: 'https://www.nature.com/natfood.rss' },
+  { source: 'CIMMYT', region: 'Mexico', topic: 'research', url: 'https://www.cimmyt.org/feed/' },
+  { source: 'IRRI', region: 'Philippines', topic: 'research', url: 'https://www.irri.org/rss.xml' },
 ]
 
 const PER_FEED = 8
-const MAX_ITEMS = 120 // every feed keeps its PER_FEED stories, so busy feeds cannot crowd out gardening
+const MAX_ITEMS = 260 // above FEEDS × PER_FEED, so every feed keeps its stories and busy feeds can't crowd others out
 const MAX_AGE_DAYS = 30
 const MAX_FEED_BYTES = 3 * 1024 * 1024
 const SUMMARY_CHARS = 220
@@ -58,7 +75,7 @@ export function plainText(v: unknown): string {
     }
     return NAMED[e.toLowerCase()] ?? m
   })
-  return s.replace(/\s+/g, ' ').trim()
+  return s.replace(/\s+/g, ' ').replace(/ ([.,;:!?])/g, '$1').trim()
 }
 
 /** Cut at a word boundary so summaries stay short excerpts, not copies of the article. */
