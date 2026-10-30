@@ -19,6 +19,13 @@ type Row = {
   scanned_at: string
 }
 
+const PAGE = 1000
+// Where the last download stopped (server time each row was uploaded), per account,
+// so each sync only fetches rows added since, not the whole history again.
+const cursorKey = (userId: string) => `cg-sync-${userId}`
+const readCursor = (userId: string) => { try { return localStorage.getItem(cursorKey(userId)) } catch { return null } }
+const writeCursor = (userId: string, v: string) => { try { localStorage.setItem(cursorKey(userId), v) } catch { /* next sync re-checks */ } }
+
 const toRow = (r: ScanRecord): Row => ({
   id: r.id,
   crop: r.crop.slice(0, 64),
@@ -29,18 +36,20 @@ const toRow = (r: ScanRecord): Row => ({
   scanned_at: new Date(r.timestamp).toISOString(),
 })
 
-async function signedIn(): Promise<boolean> {
-  if (!authConfigured) return false
+/** The signed-in user's id, or null if signed out (or still needs the second factor). */
+async function signedIn(): Promise<string | null> {
+  if (!authConfigured) return null
   const { data } = await supabase().auth.getSession()
-  if (!data.session) return false
+  if (!data.session) return null
   // with two-factor enabled, the database only accepts fully verified (AAL2) sessions
   const aal = await supabase().auth.mfa.getAuthenticatorAssuranceLevel()
-  return !(aal.data && aal.data.nextLevel === 'aal2' && aal.data.currentLevel !== 'aal2')
+  return aal.data && aal.data.nextLevel === 'aal2' && aal.data.currentLevel !== 'aal2' ? null : data.session.user.id
 }
 
 /** Upload unsynced local results, then download results made on other devices. */
 export async function syncNow(): Promise<{ uploaded: number; downloaded: number }> {
-  if (!(await signedIn())) return { uploaded: 0, downloaded: 0 }
+  const userId = await signedIn()
+  if (!userId) return { uploaded: 0, downloaded: 0 }
   const sb = supabase()
   const local = await listScans()
   const pending = local.filter((r) => !r.synced)
@@ -50,14 +59,27 @@ export async function syncNow(): Promise<{ uploaded: number; downloaded: number 
     if (error) throw new Error('Couldn’t sync your history right now.')
     await markSynced(batch.map((r) => r.id))
   }
-  const { data, error } = await sb.from(TABLE).select('id,crop,prediction,status,confidence,model_version,scanned_at').order('scanned_at', { ascending: false }).limit(5000)
-  if (error) throw new Error('Couldn’t sync your history right now.')
+  // Download only rows uploaded since the last sync, a page at a time (oldest first, so the
+  // cursor can advance safely; >= plus the id check copes with rows sharing a timestamp).
   const have = new Set(local.map((r) => r.id))
+  let cursor = readCursor(userId)
   let downloaded = 0
-  for (const row of (data ?? []) as Row[]) {
-    if (have.has(row.id)) continue
-    await putScan({ id: row.id, timestamp: Date.parse(row.scanned_at), crop: row.crop, prediction: row.prediction, status: row.status, confidence: row.confidence, modelVersion: row.model_version, synced: true })
-    downloaded++
+  for (;;) {
+    let q = sb.from(TABLE).select('id,crop,prediction,status,confidence,model_version,scanned_at,created_at').order('created_at', { ascending: true }).limit(PAGE)
+    if (cursor) q = q.gte('created_at', cursor)
+    const { data, error } = await q
+    if (error) throw new Error('Couldn’t sync your history right now.')
+    const rows = (data ?? []) as (Row & { created_at: string })[]
+    for (const row of rows) {
+      if (have.has(row.id)) continue
+      have.add(row.id)
+      await putScan({ id: row.id, timestamp: Date.parse(row.scanned_at), crop: row.crop, prediction: row.prediction, status: row.status, confidence: row.confidence, modelVersion: row.model_version, synced: true })
+      downloaded++
+    }
+    const last = rows.at(-1)?.created_at
+    if (last) { writeCursor(userId, last); cursor = last }
+    // a full page whose rows all share one timestamp would loop forever; stop instead
+    if (rows.length < PAGE || rows[0].created_at === last) break
   }
   return { uploaded: pending.length, downloaded }
 }

@@ -37,6 +37,14 @@ export async function listScans(): Promise<ScanRecord[]> {
   return all.reverse()
 }
 
+/** The newest `n` scans, read with a cursor so Home doesn't load the whole history. */
+export async function recentScans(n: number): Promise<ScanRecord[]> {
+  const out: ScanRecord[] = []
+  let c = await (await db()).transaction(STORE).store.index('timestamp').openCursor(null, 'prev')
+  while (c && out.length < n) { out.push(c.value); c = await c.continue() }
+  return out
+}
+
 /** Store a scan as-is (used when merging history synced from another device). */
 export async function putScan(rec: ScanRecord): Promise<void> {
   await (await db()).put(STORE, rec)

@@ -14,6 +14,8 @@ function Thumb({ blob }: { blob?: Blob }) {
   return url ? <img className="thumb" src={url} alt="" /> : <span className="thumb" />
 }
 
+const PAGE = 50
+
 const when = (t: number) =>
   new Date(t).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
 
@@ -60,6 +62,7 @@ export function ScanRow({ s, displayName, tone, onDelete }: RowProps) {
 export default function History({ onBack, displayName, tone }: { onBack: () => void; displayName: RowProps['displayName']; tone?: RowProps['tone'] }) {
   const [scans, setScans] = useState<ScanRecord[] | null>(null)
   const [confirming, setConfirming] = useState(false)
+  const [shown, setShown] = useState(PAGE) // long histories render in pages; each row makes a thumbnail URL
   const refresh = () => listScans().then(setScans).catch(() => setScans([]))
   useEffect(() => { refresh() }, [])
 
@@ -81,10 +84,13 @@ export default function History({ onBack, displayName, tone }: { onBack: () => v
       )}
       {!!scans?.length && (
         <div className="list-card stagger">
-          {scans.map((s) => (
+          {scans.slice(0, shown).map((s) => (
             <ScanRow key={s.id} s={s} displayName={displayName} tone={tone} onDelete={(id) => removeScan(id).then(refresh)} />
           ))}
         </div>
+      )}
+      {!!scans && scans.length > shown && (
+        <button className="btn full" onClick={() => setShown(shown + PAGE)}>Show older checks ({scans.length - shown} more)</button>
       )}
       {!!scans?.length && (confirming ? (
         <div className="callout attention" role="alertdialog" aria-label="Delete all history">

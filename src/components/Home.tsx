@@ -1,7 +1,7 @@
 import { ArrowsClockwise, Camera, CheckCircle, ClockCounterClockwise, CloudArrowDown, Leaf, WarningCircle } from '@phosphor-icons/react'
 import { authConfigured } from '../auth/client'
 import { useEffect, useState } from 'react'
-import { listScans, type ScanRecord } from '../db/history'
+import { recentScans, type ScanRecord } from '../db/history'
 import { useModels } from '../hooks/useModels'
 import type { ModelId } from '../ml/modelRegistry'
 import { ScanRow, type Tone } from './History'
@@ -43,7 +43,7 @@ export default function Home({ onScan, onHistory, onAbout, onAccount, online, of
   const ready = IDS.every((id) => state[id].status === 'ready')
   const failed = IDS.filter((id) => state[id].status === 'error')
   const [recent, setRecent] = useState<ScanRecord[]>([])
-  useEffect(() => { listScans().then((s) => setRecent(s.slice(0, 3))).catch(() => {}) }, [])
+  useEffect(() => { recentScans(3).then(setRecent).catch(() => {}) }, [])
 
   const status = failed.length
     ? { cls: 'bad', icon: <WarningCircle size={16} weight="fill" aria-hidden />, text: 'Part of CropGuard couldn’t load' }
